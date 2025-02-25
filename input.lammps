@@ -1,0 +1,35 @@
+units real
+atom_style full
+
+package kokkos neigh half 
+package kokkos neigh/qeq half
+package kokkos newton on
+
+read_data lmp.data
+replicate 1 1 1
+pair_style reaxff NULL 
+pair_coeff * * reaxCHOFe.ff Si O H
+fix myqeq all qeq/reaxff 50 0.0 8.0 1.0e-4 reaxff maxiter 200
+
+
+group grpSi type 1
+group grpO type 2
+group grpH type 3
+variable qSi equal charge(grpSi)/count(grpSi)
+variable qO equal charge(grpO)/count(grpO)
+variable qH equal charge(grpH)/count(grpH)
+
+neighbor 2.0 bin
+neigh_modify every 1000 delay 0 check no
+
+thermo 5
+thermo_style custom step temp etotal press vol 
+dump dmp all custom 50 dump.lammpstrj id type q x y z
+
+fix mynvt all nvt temp 300.0 300.0 100
+
+timestep 0.5 
+
+run 1000
+
+write_data xyz.data
